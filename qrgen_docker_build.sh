@@ -1,42 +1,59 @@
 #!/bin/bash
 
 # Configuration
-IMAGE_NAME="qrgen-app"
-CONTAINER_NAME="qrgen"
-PORT="5050"
+NETWORK_NAME="qrgen-network"
+GEN_IMAGE="qr-gen"
+TESTER_IMAGE="qr-tester"
 
-echo "--- Starting Rebuild Process ---"
+echo "--- Starting Global Rebuild Process ---"
 
-# 0. Check if .env exists (CRITICAL)
-if [ ! -f .env ]; then
-    echo "ERROR: .env file not found! Please create it first."
+# 1. Load environment variables correctly
+if [ -f .env ]; then
+    set -a
+    source .env
+    set +a
+    echo "--- Configuration loaded from .env ---"
+else
+    echo "ERROR: .env file not found."
     exit 1
 fi
 
-# 1. Stop and remove existing container
-if [ "$(docker ps -aq -f name=${CONTAINER_NAME})" ]; then
-    echo "Stopping and removing existing container..."
-    docker rm -f ${CONTAINER_NAME}
+# 2. Network Setup
+if ! docker network inspect "$NETWORK_NAME" >/dev/null 2>&1; then
+    echo "Creating Docker network: ${NETWORK_NAME}..."
+    docker network create "$NETWORK_NAME"
 fi
 
-# 2. Build the image
-echo "Building image..."
-docker build -t ${IMAGE_NAME} .
+# 3. Cleanup existing containers
+echo "Cleaning up existing containers..."
+docker rm -f qrgen qrgen-tester >/dev/null 2>&1
 
-# 3. Run the container
-echo "Launching container..."
+# 4. Build & Run: QR GENERATOR
+echo "Building Generator image..."
+docker build -t ${GEN_IMAGE} .
+
 docker run -d \
-    -p ${PORT}:${PORT} \
-    --name ${CONTAINER_NAME} \
+    --name qrgen \
+    --network ${NETWORK_NAME} \
     --env-file .env \
-    ${IMAGE_NAME}
+    -p ${PORT_GEN}:${PORT_GEN} \
+    ${GEN_IMAGE}
 
-# 4. Verification
-sleep 2 # Wait for Flask to initialize
-if [ "$(docker inspect -f '{{.State.Running}}' ${CONTAINER_NAME})" == "true" ]; then
-    echo "--- Rebuild Complete! ---"
-    echo "App is running at http://localhost:${PORT}"
+# 5. Build & Run: API TESTER
+if [ -d "tester" ]; then
+    echo "Building and Launching Tester..."
+    docker build -t ${TESTER_IMAGE} ./tester
+    docker run -d \
+        --name qrgen-tester \
+        --network ${NETWORK_NAME} \
+        -p ${PORT_TESTER}:80 \
+        -e QR_API_URL=${QR_API_URL} \
+        -e QR_API_TOKEN=${API_TOKEN} \
+        ${TESTER_IMAGE}
 else
-    echo "--- ERROR: Container failed to start ---"
-    docker logs ${CONTAINER_NAME}
+    echo "INFO: 'tester' directory not found, skipping tester deployment."
 fi
+
+echo "--- Process Finished ---"
+echo "Generator UI: http://localhost:${PORT_GEN}"
+echo "API Tester UI: http://localhost:${PORT_TESTER}"
