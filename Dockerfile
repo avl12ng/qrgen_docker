@@ -1,18 +1,22 @@
-# Image de base légère
+# Use an official and lightweight Python image
 FROM python:3.11-slim
 
-# Dossier de travail dans le conteneur
+# Set the working directory inside the container
 WORKDIR /app
 
-# Installation des dépendances
+# Copy the dependencies list first to leverage Docker cache
 COPY requirements.txt .
+
+# Install required Python libraries
+# --no-cache-dir is used to keep the image size small
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copie du code de l'application
+# Copy the application script into the container
 COPY app_qrgen.py .
 
-# On informe Docker que le conteneur écoute sur le port 5000
+# Expose the internal port the app runs on
 EXPOSE 5050
 
-# Commande de démarrage
+# Command to run the application
+# We use the specific filename you defined
 CMD ["python", "app_qrgen.py"]
