@@ -9,3 +9,6 @@ qrcode
 
 # Image processing backend (required by qrcode for PNG generation)
 pillow
+
+# Environment variables management (.env support)
+python-dotenv
