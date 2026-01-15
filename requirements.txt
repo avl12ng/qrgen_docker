@@ -1,3 +1,11 @@
+# Web framework
 flask
+
+# CORS support for cross-origin API requests
+flask-cors
+
+# QR Code generation logic
 qrcode
+
+# Image processing backend (required by qrcode for PNG generation)
 pillow
