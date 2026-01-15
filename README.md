@@ -4,14 +4,30 @@ A lightweight, responsive, and multilingual web interface to generate QR codes. 
 
 ## 🚀 Features
 
+- **Batch Generation**: Upload `.txt` or `.csv` files to get a `.zip` containing multiple QR codes.
+- **One-Click Deployment**: Automated bash script to handle network creation, builds, and container management.
+- **Secured API**: Dedicated `/api/generate` endpoint protected by a mandatory token.
+- **Microservice Architecture**: Fully isolated environments using a dedicated Docker bridge network.
+- **Environment Driven**: Configuration managed via `.env` for better security.
 - **Responsive Web UI**: Built with MVP.css for a clean look on desktop and mobile.
 - **Multilingual Support**: Automatic detection (EN/FR) with a manual language switcher.
-- **Batch Generation**: Upload `.txt` or `.csv` files to get a `.zip` containing multiple QR codes.
-- **Secured API**: Dedicated `/api/generate` endpoint protected by a mandatory token.
-- **Environment Driven**: Configuration managed via `.env` for better security.
-- **Developer Tools**: Includes a bash script for automated build and redeployment.
 
-## 🛠️ Installation & Setup
+📦 Project Structure
+```plaintext
+.
+├── app_qrgen.py           # Core Python/Flask Generator
+├── Dockerfile             # Generator container configuration
+├── requirements.txt       # Python dependencies
+├── qrgen_docker_build.sh  # Automated deployment script
+├── .env.example           # Template for environment variables
+├── .gitignore             # Git exclusion rules
+├── LICENSE                # MIT License
+└── tester/                # API Testing Microservice
+    ├── index.php          # Bilingual PHP Test Interface
+    └── Dockerfile         # Tester container configuration
+```
+
+## 🚀 Getting Started
 
 ### 1. Clone the repository
 ```bash
@@ -21,14 +37,21 @@ cd qrgen_docker
 
 ### 2. Configure Environment Variables
 
-Create a .env file in the root directory:
-```env
-API_TOKEN=your_very_secret_token_here
-PORT=5050
+Create your environment file based on the template:
+```bash
+cp .env.example .env
 ```
 
-### 3. Build and Run
+Edit .env and set your API_TOKEN and preferred ports
+```plaintext
+API_TOKEN=your_very_secret_token_here
+PORT_GEN=5050
+PORT_TESTER=8081
+```
 
+### 3. Deployment
+
+Run the master build script. It will automatically create the qrgen-network and start qrgen and qrgen-tester services.
 Use the provided automation script:
 ```bash
 chmod +x qrgen_docker_build.sh
@@ -38,8 +61,14 @@ chmod +x qrgen_docker_build.sh
 🔌 API Integration
 
 To use the generator from another website (e.g., PHP or JS) without exposing your secret token, use a backend proxy.
+The generator provides a secure endpoint at GET /api/generate.
 
 Endpoint: GET /api/generate?data=YOUR_TEXT&token=YOUR_TOKEN
+
+Required Parameters:
+
+- data: The text or URL to encode.
+- token: Must match the API_TOKEN defined in your .env.
 
 Example with PHP
 ```php
@@ -54,25 +83,14 @@ echo $image;
 ?>
 ```
 
-📦 Project Structure
-```plaintext
-.
-├── app_qrgen.py             # Main Flask application
-├── Dockerfile               # Container configuration
-├── requirements.txt         # Python dependencies
-├── qrgen_docker_build.sh    # Build & Deploy automation script
-├── .env.example             # Example configuration file
-├── .gitignore               # Files excluded from Git
-└── README.md                # Documentation
-```
+Backend Proxy Example (PHP): The included tester demonstrates how to call the API from your server-side code to hide the secret token from the end-user's browser.
 
 🔒 Security
 
-The .env file is ignored by Git to prevent secret leaks.
-
-Cross-Origin Resource Sharing (CORS) is enabled for flexible integration.
-
-In-memory processing: No images are stored on the server disk.
+- The .env file is ignored by Git to prevent secret leaks.
+- Internal communication between containers happens over a private Docker network.
+- Cross-Origin Resource Sharing (CORS) is enabled for flexible integration.
+- In-memory processing: No images are stored on the server disk.
 
 📄 License
 
