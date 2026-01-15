@@ -3,6 +3,7 @@
  * QR API Tester - PHP Proxy Simulation
  * Features: Multi-language support (FR/EN), Responsive Design, Secure API calling
  */
+header('Content-Type: text/html; charset=utf-8'); // Force UTF-8 encoding
 
 // 1. Configuration from Docker Environment Variables
 $api_url = getenv('QR_API_URL');
