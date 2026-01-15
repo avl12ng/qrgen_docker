@@ -35,6 +35,7 @@ docker build -t ${GEN_IMAGE} .
 docker run -d \
     --name qrgen \
     --network ${NETWORK_NAME} \
+    --restart unless-stopped \
     --env-file .env \
     -p ${PORT_GEN}:${PORT_GEN} \
     ${GEN_IMAGE}
@@ -46,6 +47,7 @@ if [ -d "tester" ]; then
     docker run -d \
         --name qrgen-tester \
         --network ${NETWORK_NAME} \
+        --restart unless-stopped
         -p ${PORT_TESTER}:80 \
         -e QR_API_URL=${QR_API_URL} \
         -e QR_API_TOKEN=${API_TOKEN} \
